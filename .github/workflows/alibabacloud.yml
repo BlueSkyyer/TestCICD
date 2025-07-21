@@ -73,6 +73,9 @@ jobs:
         username: ${{ secrets.ECS_USERNAME }}
         password: ${{ secrets.ECS_PASSWORD }}
         script: |
+          # 登录阿里云ACR
+          docker login -u ${{ secrets.REGISTRY_USERNAME }} ${{ env.REGISTRY }} -p ${{ secrets.REGISTRY_PASSWORD }}
+          
           # 拉取最新镜像
           docker pull ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.IMAGE }}:${{ env.TAG }}
           
