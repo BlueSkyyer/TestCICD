@@ -26,11 +26,11 @@ on:
 # Environment variables available to all jobs and steps in this workflow.
 env:
   REGISTRY: crpi-84lajww1vwmf2e1i.cn-hangzhou.personal.cr.aliyuncs.com # 阿里云的凭证
-  NAMESPACE: minecraft # 命名空间
+  NAMESPACE: blueskyf # 命名空间
   IMAGE: minecraft # 镜像名
   TAG: ${{ github.sha }}
-  ACK_CLUSTER_ID: clusterID
-  ACK_DEPLOYMENT_NAME: nginx-deployment
+  # ACK_CLUSTER_ID: clusterID
+  # ACK_DEPLOYMENT_NAME: nginx-deployment
 
   # ACR_EE_REGISTRY: myregistry.cn-hangzhou.cr.aliyuncs.com
   # ACR_EE_INSTANCE_ID: instanceID
@@ -69,8 +69,11 @@ jobs:
       uses: aliyun/acr-scan@v1
       with:
         region-id: "${{ env.REGION_ID }}"
-        access-key-id: "${{ secrets.ACCESS_KEY_ID }}"
-        access-key-secret: "${{ secrets.ACCESS_KEY_SECRET }}"
+        login-server: https://registry.cn-hangzhou.aliyuncs.com
+        username: "${{ secrets.REGISTRY_USERNAME }}"
+        password: "${{ secrets.REGISTRY_PASSWORD }}"
+        # access-key-id: "${{ secrets.ACCESS_KEY_ID }}"
+        # access-key-secret: "${{ secrets.ACCESS_KEY_SECRET }}"
         repository: "${{ env.NAMESPACE }}/${{ env.IMAGE }}"
         tag: "${{ env.TAG }}"
 
