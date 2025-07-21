@@ -29,14 +29,6 @@ env:
   NAMESPACE: blueskyf # 命名空间
   IMAGE: minecraft # 镜像名
   TAG: ${{ github.sha }}
-  # ACK_CLUSTER_ID: clusterID
-  # ACK_DEPLOYMENT_NAME: nginx-deployment
-
-  # ACR_EE_REGISTRY: myregistry.cn-hangzhou.cr.aliyuncs.com
-  # ACR_EE_INSTANCE_ID: instanceID
-  # ACR_EE_NAMESPACE: namespace
-  # ACR_EE_IMAGE: repo
-  # ACR_EE_TAG: ${{ github.sha }}
 
 permissions:
   contents: read
@@ -68,57 +60,32 @@ jobs:
     - name: Scan image in ACR
       uses: aliyun/acr-scan@v1
       with:
-        # region-id: "${{ env.REGION_ID }}"
-        login-server: "${{ env.REGISTRY }}"
-        username: "${{ secrets.REGISTRY_USERNAME }}"
-        password: "${{ secrets.REGISTRY_PASSWORD }}"
-        # access-key-id: "${{ secrets.ACCESS_KEY_ID }}"
-        # access-key-secret: "${{ secrets.ACCESS_KEY_SECRET }}"
+        region-id: "cn-hangzhou"
+        access-key-id: "${{ secrets.ACCESS_KEY_ID }}"
+        access-key-secret: "${{ secrets.ACCESS_KEY_SECRET }}"
         repository: "${{ env.NAMESPACE }}/${{ env.IMAGE }}"
         tag: "${{ env.TAG }}"
 
-    # # 2.1 (Optional) Login to ACR EE
-    # - uses: actions/checkout@v4
-    # - name: Login to ACR EE with the AccessKey pair
-    #   uses: aliyun/acr-login@v1
-    #   with:
-    #     login-server: "https://${{ env.ACR_EE_REGISTRY }}"
-    #     region-id: "${{ env.REGION_ID }}"
-    #     access-key-id: "${{ secrets.ACCESS_KEY_ID }}"
-    #     access-key-secret: "${{ secrets.ACCESS_KEY_SECRET }}"
-    #     instance-id: "${{ env.ACR_EE_INSTANCE_ID }}"
-
-    # # 2.2 (Optional) Build and push image ACR EE
-    # - name: Build and push image to ACR EE
-    #   run: |
-    #     docker build -t "$ACR_EE_REGISTRY/$ACR_EE_NAMESPACE/$ACR_EE_IMAGE:$TAG" .
-    #     docker push "$ACR_EE_REGISTRY/$ACR_EE_NAMESPACE/$ACR_EE_IMAGE:$TAG"
-    # # 2.3 (Optional) Scan image in ACR EE
-    # - name: Scan image in ACR EE
-    #   uses: aliyun/acr-scan@v1
-    #   with:
-    #     region-id: "${{ env.REGION_ID }}"
-    #     access-key-id: "${{ secrets.ACCESS_KEY_ID }}"
-    #     access-key-secret: "${{ secrets.ACCESS_KEY_SECRET }}"
-    #     instance-id: "${{ env.ACR_EE_INSTANCE_ID }}"
-    #     repository: "${{ env.ACR_EE_NAMESPACE}}/${{ env.ACR_EE_IMAGE }}"
-    #     tag: "${{ env.ACR_EE_TAG }}"
-
-    # # 3.1 Set ACK context
-    # - name: Set K8s context
-    #   uses: aliyun/ack-set-context@v1
-    #   with:
-    #     access-key-id: "${{ secrets.ACCESS_KEY_ID }}"
-    #     access-key-secret: "${{ secrets.ACCESS_KEY_SECRET }}"
-    #     cluster-id: "${{ env.ACK_CLUSTER_ID }}"
-
-    # # 3.2 Deploy the image to the ACK cluster
-    # - name: Set up Kustomize
-    #   run: |-
-    #     curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash /dev/stdin 3.8.6
-    # - name: Deploy
-    #   run: |-
-    #     ./kustomize edit set image REGISTRY/NAMESPACE/IMAGE:TAG=$REGISTRY/$NAMESPACE/$IMAGE:$TAG
-    #     ./kustomize build . | kubectl apply -f -
-    #     kubectl rollout status deployment/$ACK_DEPLOYMENT_NAME
-    #     kubectl get services -o wide
+    - name: Deploy to ECS via SSH
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.ECS_HOST }}
+        username: ${{ secrets.ECS_USERNAME }}
+        password: ${{ secrets.ECS_PASSWORD }}
+        script: |
+          # 拉取最新镜像
+          docker pull ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.IMAGE }}:${{ env.TAG }}
+          
+          # 停止并删除旧容器
+          docker stop minecraft-server || true
+          docker rm minecraft-server || true
+          
+          # 运行新容器（带持久化数据卷）
+          docker run -d \
+            --name minecraft-server \
+            -p 25565:25565 \
+            -v /minecraft-data:/data \
+            ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.IMAGE }}:${{ env.TAG }}
+          
+          # 清理旧镜像
+          docker image prune -af
