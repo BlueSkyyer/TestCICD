@@ -20,8 +20,11 @@
 name: Build and Deploy to ACK
 
 on:
-  pull_request:
+  push:
     branches: [ "master" ]
+    tags:
+      - v1.*
+      - v0.*
 
 # Environment variables available to all jobs and steps in this workflow.
 env:
