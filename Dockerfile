@@ -10,7 +10,7 @@ COPY . .
 # 确保启动脚本有执行权限
 RUN chmod +x server.sh
 
-# 暴露端口
+# 暴露使用的端口
 EXPOSE 25565
 
 # 启动命令
