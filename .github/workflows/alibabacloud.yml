@@ -21,7 +21,8 @@ name: Build and Deploy to ACK
 
 on:
   push:
-    branches: [ "master", "dev" ]
+    branches:
+      - dev
     tags:
       - v1.*
       - v0.*
@@ -44,6 +45,8 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v4
+      with:
+        ref: 'dev'
 
     # 1.1 Login to ACR
     - name: Login to ACR with the AccessKey pair
