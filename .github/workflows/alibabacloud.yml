@@ -3,9 +3,14 @@ name: Build and Deploy to ACK
 
 on:
   pull_request:
+    branches:
+      - master
+    tags:
+      - 'v1.*'
+      - 'v0.*'
   push:
     branches:
-      - dev
+      - master
     tags:
       - 'v1.*'
       - 'v0.*'
