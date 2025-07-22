@@ -1,23 +1,18 @@
 
-name: Build and Deploy to ACK
+name: 打包并部署到阿里云
 
 on:
-  # pull_request:
-  #   branches:
-  #     - master
-  #   tags:
-  #     - 'v1.*'
-  #     - 'v0.*'
   push:
     branches:
       - master
     tags:
       - 'v1.*'
       - 'v0.*'
+    paths-ignore:
+      - '.github/workflows/*'  # 忽略工作流文件变更
 
-# Environment variables available to all jobs and steps in this workflow.
 env:
-  REGISTRY: crpi-84lajww1vwmf2e1i.cn-hangzhou.personal.cr.aliyuncs.com # 阿里云的凭证
+  REGISTRY: crpi-84lajww1vwmf2e1i.cn-hangzhou.personal.cr.aliyuncs.com # 阿里云ACR容器地址
   NAMESPACE: blueskyf # 命名空间
   IMAGE: minecraft # 镜像名
   TAG: ${{ github.sha }}
@@ -31,12 +26,11 @@ jobs:
     environment: production
 
     steps:
-    - name: Checkout
+    - name: 检出代码
       # if: github.event_name == 'pull_request'
       uses: actions/checkout@v4
 
-    # 1.1 Login to ACR
-    - name: Login to ACR with the AccessKey pair
+    - name: 登入阿里云容器镜像服务
       # if: github.event_name == 'pull_request'
       uses: aliyun/acr-login@v1
       with:
@@ -44,15 +38,13 @@ jobs:
         username: "${{ secrets.REGISTRY_USERNAME }}"
         password: "${{ secrets.REGISTRY_PASSWORD }}"
 
-    # 1.2 Build and push image to ACR
-    - name: Build and push image to ACR
+    - name: 构建并推送镜像到阿里云
       # if: github.event_name == 'pull_request'
       run: |
         docker build --tag "$REGISTRY/$NAMESPACE/$IMAGE:$TAG" .
         docker push "$REGISTRY/$NAMESPACE/$IMAGE:$TAG"
 
-    # 1.3 阿里云ACR提供的安全扫描
-    - name: Scan image in ACR
+    - name: 阿里云容器镜像安全扫描
       # if: github.event_name == 'pull_request'
       uses: aliyun/acr-scan@v1
       with:
@@ -62,7 +54,7 @@ jobs:
         repository: "${{ env.NAMESPACE }}/${{ env.IMAGE }}"
         tag: "${{ env.TAG }}"
 
-    - name: Deploy to ECS via SSH
+    - name: 通过SSH连接阿里云ECS以部署镜像
       # if: github.event_name == 'push'
       uses: appleboy/ssh-action@v1.0.0
       with:
@@ -70,18 +62,28 @@ jobs:
         username: ${{ secrets.ECS_USERNAME }}
         password: ${{ secrets.ECS_PASSWORD }}
         script: |
+          # 进入工作目录
+          cd /minecraft
+          
+          # 获取最新 docker-compose.yml
+          wget -q https://raw.githubusercontent.com/${{ github.repository }}/${{ github.ref_name }}/docker-compose.yml
+          
+          # 更新环境变量
+          echo "REGISTRY=${{ env.REGISTRY }}" > .env
+          echo "NAMESPACE=${{ env.NAMESPACE }}" >> .env
+          echo "IMAGE=${{ env.IMAGE }}" >> .env
+          echo "TAG=${{ env.TAG }}" >> .env
+
           # 登录阿里云ACR
-          echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login -u ${{ secrets.REGISTRY_USERNAME }} ${{ env.REGISTRY }} -password-stdin 
+          echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login -u ${{ secrets.REGISTRY_USERNAME }} ${{ env.REGISTRY }} --password-stdin 
           
           # 拉取最新镜像
           docker pull ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.IMAGE }}:${{ env.TAG }}
           
-          # 停止并删除旧容器
-          docker-compose stop minecraft || true
-          docker-compose rm -f minecraft || true
-          
-          # 运行新容器（带持久化数据卷）
+          # 执行
+          docker-compose down
+          docker-compose pull
           docker-compose up -d
           
           # 清理旧镜像
-          docker image prune -af
+          docker system prune -af
