@@ -24,8 +24,8 @@ on:
     branches:
       - dev
     tags:
-      - v1.*
-      - v0.*
+      - 'v1.*'
+      - 'v0.*'
 
 # Environment variables available to all jobs and steps in this workflow.
 env:
