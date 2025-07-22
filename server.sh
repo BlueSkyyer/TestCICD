@@ -4,7 +4,7 @@
 SERVER_JAR="velocity-3.4.0-SNAPSHOT-459.jar"
 
 # 设置 Java 内存参数
-JAVA_MEM="-Xmx 128M -Xms64M"
+JAVA_MEM="-Xmx128M -Xms64M"
 
 # 启动服务器
 echo "正在启动中..."
