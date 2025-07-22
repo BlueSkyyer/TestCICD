@@ -71,21 +71,17 @@ jobs:
         password: ${{ secrets.ECS_PASSWORD }}
         script: |
           # 登录阿里云ACR
-          docker login -u ${{ secrets.REGISTRY_USERNAME }} ${{ env.REGISTRY }} -p ${{ secrets.REGISTRY_PASSWORD }}
+          echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login -u ${{ secrets.REGISTRY_USERNAME }} ${{ env.REGISTRY }} -password-stdin 
           
           # 拉取最新镜像
           docker pull ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.IMAGE }}:${{ env.TAG }}
           
           # 停止并删除旧容器
-          docker stop minecraft-server || true
-          docker rm minecraft-server || true
+          docker-compose stop minecraft || true
+          docker-compose rm -f minecraft || true
           
           # 运行新容器（带持久化数据卷）
-          docker run -d \
-            --name minecraft-server \
-            -p 25565:25565 \
-            -v /minecraft-data:/data \
-            ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.IMAGE }}:${{ env.TAG }}
+          docker-compose up -d
           
           # 清理旧镜像
           docker image prune -af
