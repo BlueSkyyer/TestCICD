@@ -20,7 +20,7 @@ env:
   REGISTRY: crpi-84lajww1vwmf2e1i.cn-hangzhou.personal.cr.aliyuncs.com # 阿里云的凭证
   NAMESPACE: blueskyf # 命名空间
   IMAGE: minecraft # 镜像名
-  TAG: ${{ github.ref }}
+  TAG: ${{ github.event.pull_request.number }}
 
 permissions:
   contents: read
