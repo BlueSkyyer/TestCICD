@@ -6,5 +6,5 @@
 :: 运行服务端
 java -Xmx128M -Xms64M -jar velocity-3.4.0-SNAPSHOT-459.jar
 
-:: 停止操作 
+:: 暂停
 pause
