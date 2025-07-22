@@ -1,25 +1,8 @@
-# This workflow will build and push a new container image to Alibaba Cloud Container Registry (ACR),
-# and then will deploy it to Alibaba Cloud Container Service for Kubernetes (ACK), when there is a push to the "master" branch.
-#
-# To use this workflow, you will need to complete the following set-up steps:
-#
-# 1. Create an ACR repository to store your container images.
-#    You can use ACR EE instance for more security and better performance.
-#    For instructions see https://www.alibabacloud.com/help/doc-detail/142168.htm
-#
-# 2. Create an ACK cluster to run your containerized application.
-#    You can use ACK Pro cluster for more security and better performance.
-#    For instructions see https://www.alibabacloud.com/help/doc-detail/95108.htm
-#
-# 3. Store your AccessKey pair in GitHub Actions secrets named `ACCESS_KEY_ID` and `ACCESS_KEY_SECRET`.
-#    For instructions on setting up secrets see: https://developer.github.com/actions/managing-workflows/storing-secrets/
-#
-# 4. Change the values for the REGION_ID, REGISTRY, NAMESPACE, IMAGE, ACK_CLUSTER_ID, and ACK_DEPLOYMENT_NAME.
-#
 
 name: Build and Deploy to ACK
 
 on:
+  pull_request:
   push:
     branches:
       - dev
@@ -44,12 +27,14 @@ jobs:
 
     steps:
     - name: Checkout
+      if: github.event_name == 'pull_request'
       uses: actions/checkout@v4
       with:
         ref: 'dev'
 
     # 1.1 Login to ACR
     - name: Login to ACR with the AccessKey pair
+      if: github.event_name == 'pull_request'
       uses: aliyun/acr-login@v1
       with:
         login-server: "${{ env.REGISTRY }}"
@@ -58,12 +43,14 @@ jobs:
 
     # 1.2 Build and push image to ACR
     - name: Build and push image to ACR
+      if: github.event_name == 'pull_request'
       run: |
         docker build --tag "$REGISTRY/$NAMESPACE/$IMAGE:$TAG" .
         docker push "$REGISTRY/$NAMESPACE/$IMAGE:$TAG"
 
     # 1.3 Scan image in ACR
     - name: Scan image in ACR
+      if: github.event_name == 'pull_request'
       uses: aliyun/acr-scan@v1
       with:
         region-id: "cn-hangzhou"
@@ -73,6 +60,7 @@ jobs:
         tag: "${{ env.TAG }}"
 
     - name: Deploy to ECS via SSH
+      if: github.event_name == 'push'
       uses: appleboy/ssh-action@v1.0.0
       with:
         host: ${{ secrets.ECS_HOST }}
