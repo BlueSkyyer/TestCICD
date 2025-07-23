@@ -54,6 +54,15 @@ jobs:
         repository: "${{ env.NAMESPACE }}/${{ env.IMAGE }}"
         tag: "${{ env.TAG }}"
 
+    - name: 上传compose到ECS
+      uses: appleboy/scp-action@v1.0.0
+      with:
+        host: ${{ secrets.ECS_HOST }}
+        username: ${{ secrets.ECS_USERNAME }}
+        password: ${{ secrets.ECS_PASSWORD }}
+        source: "docker-compose.yml"
+        target: "/minecraft"
+
     - name: 通过SSH连接阿里云ECS以部署镜像
       # if: github.event_name == 'push'
       uses: appleboy/ssh-action@v1.0.0
@@ -64,10 +73,7 @@ jobs:
         script: |
           # 进入工作目录
           cd /minecraft
-          
-          # 获取最新 docker-compose.yml
-          wget -q https://raw.githubusercontent.com/${{ github.repository }}/${{ github.ref_name }}/docker-compose.ymll?token=
-          
+                    
           # 更新环境变量
           echo "REGISTRY=${{ env.REGISTRY }}" > .env
           echo "NAMESPACE=${{ env.NAMESPACE }}" >> .env
