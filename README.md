@@ -1,3 +1,2 @@
 # TestCICD
 以Minecraft服务端来测试的CICD
-测试测试测试
