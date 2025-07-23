@@ -6,8 +6,8 @@ on:
     branches:
       - master
     tags:
-      - 'v1.*'
-      - 'v0.*'
+      - v1.*
+      - v0.*
     paths-ignore:
       - '.github/workflows/*'  # 忽略工作流文件变更
 
