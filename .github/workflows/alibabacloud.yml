@@ -7,8 +7,8 @@ on:
       - master
     tags:
       - v1.*
-    paths-ignore:
-      - '.github/workflows/*'  # 忽略工作流文件变更
+    # paths-ignore:
+    #   - '.github/workflows/*'  # 忽略工作流文件变更
 
 env:
   REGISTRY: crpi-84lajww1vwmf2e1i.cn-hangzhou.personal.cr.aliyuncs.com # 阿里云ACR容器地址
