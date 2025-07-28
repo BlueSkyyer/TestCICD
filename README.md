@@ -1,2 +1,13 @@
-# TestCICD
-以Minecraft服务端来测试的CICD项目
+# 分布式应用自动化部署平台 Demo
+- 基于Github Actions工作流实现自动化CI/CD
+- 使用Docker + Docker Compose容器技术
+- 使用阿里云ACR作为镜像仓库
+- 使用阿里云ECS作为应用部署服务器
+- 借助以Java语言编写的Minecraft Velocity核心作为应用部署实践对象
+
+## 流程实现：
+提交代码 -> 打包并推送项目镜像 -> 拉取镜像并部署
+
+## 解决痛点：
+- 传统人工部署费时费力，人工干预有一定的错误率
+- 环境差异大、回滚慢、安全风险高
